@@ -1,0 +1,5 @@
+* {
+    margin: 0.5rem; /* Reduced from default */
+    padding: 0.5rem; /* Reduced from default */
+    box-sizing: border-box;
+}

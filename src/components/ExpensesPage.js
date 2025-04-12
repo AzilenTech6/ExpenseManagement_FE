@@ -19,7 +19,7 @@ function ExpensesPage() {
   };
 
   return (
-    <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
+    <div style={{ display: 'flex', gap: '20px'}}>
       <div style={{ flex: 1 }}>
         <AddExpense onAddExpense={handleAddExpense} />
       </div>

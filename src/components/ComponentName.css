@@ -1,0 +1,5 @@
+.component-class {
+    margin: 0.25rem !important; /* Further reduced and added !important to override conflicts */
+    padding: 0.25rem !important; /* Further reduced and added !important */
+    gap: 0.25rem !important; /* Further reduced and added !important */
+}

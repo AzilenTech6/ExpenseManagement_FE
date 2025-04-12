@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 
 function AddExpense({ onAddExpense }) {
   const [expense, setExpense] = useState({
@@ -8,6 +8,30 @@ function AddExpense({ onAddExpense }) {
     description: '',
   });
 
+  const [categories, setCategories] = useState([]); // State to store categories
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/categories`);        
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+        const data = await response.json();
+        setCategories(data); // Assuming the API returns an array of categories
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        alert('Failed to load categories. Please try again.');
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+
+  const [isSubmitting, setIsSubmitting] = useState(false); // To handle submission state
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setExpense((prevExpense) => ({
@@ -16,15 +40,58 @@ function AddExpense({ onAddExpense }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    if (!expense.amount) {
+      alert('Amount is required');
+      return false;
+    }
+    if (!expense.date) {
+      alert('Date is required');
+      return false;
+    }
+    if (!expense.category) {
+      alert('Category is required');
+      return false;
+    }
+    return true;
+  };
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onAddExpense(expense); // Pass the expense to the parent component
-    setExpense({
-      amount: '',
-      date: '',
-      category: '',
-      description: '',
-    });
+    if (!validateForm()) {
+      return; // Stop submission if validation fails
+    }
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/expenses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(expense),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add expense');
+      }
+
+      const data = await response.json();
+      onAddExpense(data); // Pass the response data to the parent component
+      setExpense({
+        amount: '',
+        date: '',
+        category: '',
+        description: '',
+      });
+      alert('Expense added successfully!'); // Optional success message
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      alert('Failed to add expense. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -38,8 +105,8 @@ function AddExpense({ onAddExpense }) {
         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
         width: '90%', // Adjust width for responsiveness
         maxWidth: '400px', // Maximum width
-        margin: '5px auto', // Reduced margin for better alignment
         border: '1px solid #444',
+        height: 'auto'
       }}
     >
       <div style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -51,7 +118,7 @@ function AddExpense({ onAddExpense }) {
           onChange={handleChange}
           required
           style={{
-            width: '80%', // Decreased width
+            width: '90%', // Decreased width
             padding: '8px', // Reduced padding
             borderRadius: '5px',
             border: '1px solid #555',
@@ -69,7 +136,7 @@ function AddExpense({ onAddExpense }) {
           onChange={handleChange}
           required
           style={{
-            width: '80%', // Decreased width
+            width: '90%', // Decreased width
             padding: '8px', // Reduced padding
             borderRadius: '5px',
             border: '1px solid #555',
@@ -80,21 +147,27 @@ function AddExpense({ onAddExpense }) {
       </div>
       <div style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
         <label style={{ marginBottom: '5px', fontWeight: 'bold', color: '#ffffff' }}>Category:</label>
-        <input
-          type="text"
+        <select
           name="category"
           value={expense.category}
           onChange={handleChange}
           required
           style={{
-            width: '80%', // Decreased width
-            padding: '8px', // Reduced padding
+            width: '90%',
+            padding: '8px',
             borderRadius: '5px',
             border: '1px solid #555',
-            backgroundColor: '#444444', // Dark input background
-            color: '#ffffff', // Light text
+            backgroundColor: '#444444',
+            color: '#ffffff',
           }}
-        />
+        >
+          <option value="" disabled>Select a category</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.name}>
+              {category.name}
+            </option>
+          ))}
+        </select>
       </div>
       <div style={{ marginBottom: '15px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
         <label style={{ marginBottom: '5px', fontWeight: 'bold', color: '#ffffff' }}>Description:</label>
@@ -104,7 +177,7 @@ function AddExpense({ onAddExpense }) {
           onChange={handleChange}
           required
           style={{
-            width: '80%', // Decreased width
+            width: '90%', // Decreased width
             padding: '8px', // Reduced padding
             borderRadius: '5px',
             border: '1px solid #555',
@@ -129,7 +202,7 @@ function AddExpense({ onAddExpense }) {
           fontSize: '14px', // Reduced font size
         }}
       >
-        Add Expense
+        {isSubmitting ? 'Submitting...' : 'Add Expense'}
       </button>
     </form>
   );
